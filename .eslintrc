@@ -1,0 +1,17 @@
+{
+  "env": {
+    "es6": true,
+    "browser": true,
+    "node": true,
+    "jquery": true
+  },
+  "extends": "eslint:recommended",
+  "rules": {
+    "no-console": ["error", { allow: ["warn"] }],
+    "no-unused-vars": "off"
+  },
+  "globals": {
+    "window": true,
+    "ga": true
+  }
+}
