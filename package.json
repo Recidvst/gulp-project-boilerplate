@@ -1,20 +1,21 @@
 {
-  "name": "gulp-v3-project-boilerplate",
+  "name": "gulp-v4-project-boilerplate",
   "version": "0.0.1",
-  "description": "Gulp v3 project boilerplate",
+  "description": "Gulp v4 project boilerplate",
   "main": "",
-  "authors": [
-    ""
-  ],
+  "author": "",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo 'npm OK'",
+    "lintJS": "eslint --fix './js/**/*.js'",
+    "lintCSS": "stylelint --fix './css/**/*.scss'",
     "dev": "gulp dev",
     "prod": "gulp prod"
   },
   "devDependencies": {
     "browser-sync": "^2.26.3",
     "del": "^4.0.0",
-    "gulp": "^3.9.0",
+    "eslint": "^5.15.3",
+    "gulp": "^4.0.0",
     "gulp-autoprefixer": "^6.0.0",
     "gulp-cache": "^1.1.1",
     "gulp-clean-css": "^4.0.0",
@@ -25,6 +26,9 @@
     "gulp-rename": "^1.4.0",
     "gulp-sass": "^4.0.2",
     "gulp-sourcemaps": "^2.6.5",
-    "gulp-uglify": "^3.0.2"
+    "gulp-stylelint": "^8.0.0",
+    "gulp-uglify": "^3.0.2",
+    "stylelint": "^9.10.1",
+    "stylelint-config-standard": "^18.2.0"
   }
 }
