@@ -292,6 +292,6 @@ exports.browserSyncReload = browserSyncReload;
 exports.watchFiles = watchFiles;
 
 // default, dev and prod tasks
-exports.default = series(check, clean, cleanCache, devStyles, prodStyles, lintCSS, lintJS, devScripts, prodScripts, images, browserSyncServe, watchFiles);
-exports.dev = series(check, clean, devStyles, lintCSS, lintJS, devScripts, images, browserSyncServe, watchFiles);
-exports.prod = series(check, clean, cleanCache, devStyles, prodStyles, lintCSS, lintJS, devScripts, prodScripts);
+exports.default = series(check, clean, cleanCache, copy, devStyles, prodStyles, lintCSS, lintJS, devScripts, prodScripts, images, browserSyncServe, watchFiles);
+exports.dev = series(check, clean, copy, devStyles, lintCSS, lintJS, devScripts, images, browserSyncServe, watchFiles);
+exports.prod = series(check, clean, cleanCache, copy, devStyles, prodStyles, lintCSS, lintJS, devScripts, prodScripts);
