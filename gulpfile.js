@@ -1,7 +1,8 @@
 /**
  * Init Gulp plugins
  */
-var gulp = require("gulp"),
+
+const gulp = require("gulp"),
   scss = require("gulp-sass"),
   sourcemaps = require("gulp-sourcemaps"),
   autoprefixer = require("gulp-autoprefixer"),
@@ -15,13 +16,16 @@ var gulp = require("gulp"),
   del = require("del"),
   path = require("path"),
   eslint = require("gulp-eslint"),
+  stylelint = require("gulp-stylelint"),
   browserSync = require("browser-sync").create();
 
+  const { watch, series, parallel } = require('gulp');
+  
 /**
  * Plumber options
  * @type {{errorHandler: errorAlert}}
  */
-var plumberOptions = {
+const plumberOptions = {
   errorHandler: errorAlert
 };
 
@@ -29,7 +33,7 @@ var plumberOptions = {
  * What browsers we want to support
  * @type {{browsers: string[], cascade: boolean}}
  */
-var autoPrefixerOptions = {
+const autoPrefixerOptions = {
   browsers: [
     "> 1%",
     "last 2 versions",
@@ -47,7 +51,7 @@ var autoPrefixerOptions = {
  * Define the SCSS files to compile
  * @type {string[]}
  */
-var stylesheets = [
+const stylesheets = [
   './css/app.scss' // other stylesheets imported into this one
 ];
 
@@ -55,159 +59,156 @@ var stylesheets = [
  * Declare all the JavaScript for the development and production builds
  * @type {string[]}
  */
-var javascript = [
+const javascript = [
   './js/vendor/**/*.js',
   './js/app.js'
 ];
 
 /**
- * List available Gulp tasks
- */
-gulp.task("default", [
-  "check",
-  "clean",
-  "copy",
-  "styles",
-  "scripts",
-  "lint",
-  "images",
-  "browser-sync",
-  "watch"
-]);
-gulp.task("dev", [
-  "check",
-  "clean",
-  "copy",
-  "styles",
-  "scripts",
-  "lint",
-  "images",
-  "browser-sync",
-  "watch"
-]);
-gulp.task("prod", [
-  "check",
-  "clean",
-  "cache-clean",
-  "copy",
-  "styles",
-  "scripts",
-  "lint",
-  "images"
-]);
-
-/**
  * Let's keep our asset folders clean and tidy - clean assets
  */
-gulp.task("clean", function(cb) {
-  return del.sync(["assets/*"]);
-});
+function clean(cb) {
+  return del(["assets/*"]);
+}
 
 /**
  * Clear cache plugin
  */
-gulp.task('cache-clean', function(cb) {
+function cleanCache() {
   return cache.clearAll()
-});
+}
 
 /**
  * Build stylesheets
  */
-gulp.task("styles", function() {
-
-  // Development CSS
-  gulp.src(stylesheets)
-      .pipe(plumber(plumberOptions))
-      .pipe(sourcemaps.init())
-      .pipe(scss({
-          paths: [path.join(__dirname, 'scss', 'includes')]
-      }))
-      .pipe(autoprefixer(autoPrefixerOptions))
-      .pipe(cleanCSS({compatibility: 'ie9', debug: true}))
-      .pipe(sourcemaps.write())
-      .pipe(gulp.dest('./assets/css/'))
-      .pipe(browserSync.reload({stream: true}))
-
-  // Production CSS
-  gulp.src(stylesheets)
-      .pipe(plumber(plumberOptions))
-      .pipe(scss({
-          paths: [path.join(__dirname, 'scss', 'includes')]
-      }))
-      .pipe(autoprefixer(autoPrefixerOptions))
-      .pipe(cleanCSS({compatibility: 'ie9', debug: true}, (details) => {
-          console.log('\x1b[35m%s\x1b[0m', `Size of original ${details.name} file = ${details.stats.originalSize}`);
-          console.log('\x1b[35m%s\x1b[0m', `Size of compressed ${details.name} file = ${details.stats.minifiedSize}`);
-      }))
-      .pipe(rename({suffix: '.min'}))
-      .pipe(gulp.dest('./assets/css/'))
-      .on('end', (e) => { console.log('\x1b[32m%s\x1b[0m', 'Styles built!'); })
-
-});
+// Development CSS
+function devStyles() {
+  return gulp
+  .src(stylesheets)
+  .pipe(plumber(plumberOptions))
+  .pipe(sourcemaps.init())
+  .pipe(scss({
+      paths: [path.join(__dirname, 'scss', 'includes')]
+  }))
+  .pipe(autoprefixer(autoPrefixerOptions))
+  .pipe(cleanCSS({compatibility: 'ie9', debug: true}))
+  .pipe(sourcemaps.write())
+  .pipe(gulp.dest('./assets/css/'))
+  .pipe(browserSync.reload({stream: true}))
+  .on('end', (e) => { console.log('\x1b[32m%s\x1b[0m', 'Development styles built!'); })
+}
+// Production CSS
+function prodStyles() {
+  return gulp
+  .src(stylesheets)
+  .pipe(plumber(plumberOptions))
+  .pipe(scss({
+      paths: [path.join(__dirname, 'scss', 'includes')]
+  }))
+  .pipe(autoprefixer(autoPrefixerOptions))
+  .pipe(cleanCSS({compatibility: 'ie9', debug: true}, (details) => {
+      console.log('\x1b[35m%s\x1b[0m', `Size of original ${details.name} file = ${details.stats.originalSize}`);
+      console.log('\x1b[35m%s\x1b[0m', `Size of compressed ${details.name} file = ${details.stats.minifiedSize}`);
+  }))
+  .pipe(rename({suffix: '.min'}))
+  .pipe(gulp.dest('./assets/css/'))
+  .on('end', (e) => { console.log('\x1b[32m%s\x1b[0m', 'Production styles built!'); })
+}
 
 /**
  * Build scripts
  */
-gulp.task('scripts', function () {
-  // Development JS
-  gulp.src(javascript)
-      .pipe(plumber(plumberOptions))
-      .pipe(sourcemaps.init())
-      .pipe(concat({path: 'app.js', stat: {mode: 0777}}))
-      .pipe(uglify({warnings: 'verbose'}))
-      .pipe(sourcemaps.write())
-      .pipe(gulp.dest('./assets/js'))
-      .pipe(browserSync.reload({stream: true}))
-
-  // Production JS
-  gulp.src(javascript)
-      .pipe(plumber(plumberOptions))
-      .pipe(concat({path: 'app.js', stat: {mode: 0777}}))
-      .pipe(uglify({warnings: 'verbose'}))
-      .pipe(rename({suffix: '.min'}))
-      .pipe(gulp.dest('./assets/js'))
-      .on('end', (e) => { console.log('\x1b[32m%s\x1b[0m', 'Scripts built!'); })
-});
+// Development JS
+function devScripts() {
+  return gulp
+  .src(javascript)
+  .pipe(plumber(plumberOptions))
+  .pipe(sourcemaps.init())
+  .pipe(concat({path: 'app.js', stat: {mode: 0777}}))
+  .pipe(uglify({warnings: 'verbose'}))
+  .pipe(sourcemaps.write())
+  .pipe(gulp.dest('./assets/js'))
+  .pipe(browserSync.reload({stream: true}))
+  .on('end', (e) => { console.log('\x1b[32m%s\x1b[0m', 'Development scripts built!'); })
+}
+// Production JS
+function prodScripts() {
+  return gulp
+  .src(javascript)
+  .pipe(plumber(plumberOptions))
+  .pipe(concat({path: 'app.js', stat: {mode: 0777}}))
+  .pipe(uglify({warnings: 'verbose'}))
+  .pipe(rename({suffix: '.min'}))
+  .pipe(gulp.dest('./assets/js'))
+  .on('end', (e) => { console.log('\x1b[32m%s\x1b[0m', 'Production scripts built!'); })
+}
 
 /**
- * Image optimisation for images dedicated to the theme
+ * Image optimisation
  */
-gulp.task('images', function () {
-  gulp.src('./img/**/*')
-      .pipe(plumber(plumberOptions))
-      .pipe(cache(imagemin({optimizationLevel: 3, progressive: true, interlaced: true, verbose: true})))
-      .pipe(gulp.dest('./assets/img'))
-      .on('end', (e) => { console.log('\x1b[36m%s\x1b[0m', 'Images compressed!'); })
-      .pipe(browserSync.reload({stream: true}))
-});
+function images() {
+  return gulp
+  .src('./img/**/*')
+  .pipe(plumber(plumberOptions))
+  .pipe(cache(imagemin({optimizationLevel: 3, progressive: true, interlaced: true, verbose: true})))
+  .pipe(gulp.dest('./assets/img'))
+  .on('end', (e) => { console.log('\x1b[36m%s\x1b[0m', 'Images compressed!'); })
+  .pipe(browserSync.reload({stream: true}))
+}
 
-// only linting our files - 3rd parties not checked
-gulp.task('lint', function () {
-  gulp
-    .src([
-      "./js/**/*.js",
-      "!js/vendor/**/*.min.js"
-    ])
-      .pipe(plumber(plumberOptions))
-      .pipe(eslint())
-      .pipe(eslint.format())
-      .pipe(eslint.failAfterError());
-});
+/**
+ * Linting JS
+ * Only linting our files - 3rd parties not checked
+ */
+function lintJS() {
+  return gulp
+  .src([
+    "./js/**/*.js",
+    "!.js/vendor/**/*.min.js"
+  ])
+  .pipe(plumber(plumberOptions))
+  // .pipe(eslint({ fix: true })) // fix lint errors in the piped asset version
+  .pipe(eslint())
+  .pipe(eslint.format())
+  .pipe(eslint.failAfterError())
+  .on('end', (e) => { console.log('\x1b[36m%s\x1b[0m', 'JS linted OK'); })
+}
+
+/**
+ * Linting CSS
+ * Only linting our files - 3rd parties not checked
+ */
+function lintCSS() {
+  return gulp
+  .src([
+    "./css/**/*.scss"
+  ])
+  .pipe(plumber(plumberOptions))
+  .pipe(stylelint({
+    reporters: [
+      {formatter: 'string', console: true, syntax: 'scss'}
+    ],
+    debug: true,
+    fix: true // fix lint errors in the piped asset version
+  }))
+  .on('end', (e) => { console.log('\x1b[36m%s\x1b[0m', 'CSS linted OK'); })
+}
 
 /**
  * Copy fonts (plus ?) over
  */
-gulp.task('copy', function () {
-  gulp.src('./src/fonts/**/*')
-      .pipe(plumber(plumberOptions))
-      .pipe(gulp.dest('./assets/fonts'))
-      .on('end', (e) => { console.log('\x1b[36m%s\x1b[0m', 'Fonts copied!'); })
-});
+function copy() {
+  return gulp
+  .src('./fonts/**/*')
+  .pipe(plumber(plumberOptions))
+  .pipe(gulp.dest('./assets/fonts'))
+  .on('end', (e) => { console.log('\x1b[36m%s\x1b[0m', 'Fonts copied'); })
+}
 
 /**
- * browser-sync
+ * Set up browser-sync
  */
-gulp.task("browser-sync", function() {
+function browserSyncServe(cb) {
   browserSync.init({
     server: {
       baseDir: "./"
@@ -233,31 +234,35 @@ gulp.task("browser-sync", function() {
     logFileChanges: true,
     // watch: true
   });
-});
+  cb();
+}
+function browserSyncReload() {
+  browserSync.reload({stream: true});
+}
 
 /**
  * Watches folders and files to so we can trigger build tasks and live refresh
  */
-gulp.task("watch", function() {
-  gulp.watch("./css/**/*.scss", ["styles"]).on('change', browserSync.reload);
-  gulp.watch("./css/**/*.css", ["styles"]).on('change', browserSync.reload);
-  gulp.watch("./js/**/*.js", ["scripts"]).on('change', browserSync.reload);
-  gulp.watch("./img/**/*", ["images"]).on('change', browserSync.reload);
-  gulp.watch([
+function watchFiles() {
+  watch(["./css/**/*.scss","./css/**/*.css"], gulp.series(["lintCSS", "devStyles", "prodStyles"]));
+  watch("./js/**/*.js", gulp.series(["lintJS", "devScripts", "prodScripts"]));
+  watch("./img/**/*", gulp.series(["images"]));
+  watch([
       './assets/**',
       './content/**',
       './layouts/**',
       './pages/**',
       './partials/**'
-  ]).on('change', browserSync.reload);
-});
+  ]).on('change', browserSyncReload);
+};
 
 /**
- * check working
+ * Check Gulp can run
  */
-gulp.task("check", function() {
+function check(cb) {
   console.log('Gulp OK');
-});
+  cb();
+}
 
 /**
  * Helper functions
@@ -267,3 +272,26 @@ function errorAlert(error) {
   console.log('\x1b[31m%s\x1b[0m', `ERROR: ${error.toString()}`); //Prints Error to Console
   this.emit("end"); //End function
 }
+
+/**
+ * Export available Gulp tasks
+ */
+exports.check = check;
+exports.clean = clean;
+exports.cleanCache = cleanCache;
+exports.copy = copy;
+exports.lintJS = lintJS;
+exports.lintCSS = lintCSS;
+exports.images = images;
+exports.devStyles = devStyles;
+exports.devScripts = devScripts;
+exports.prodStyles = prodStyles;
+exports.prodScripts = prodScripts;
+exports.browserSyncServe = browserSyncServe;
+exports.browserSyncReload = browserSyncReload;
+exports.watchFiles = watchFiles;
+
+// default, dev and prod tasks
+exports.default = series(check, clean, cleanCache, devStyles, prodStyles, lintCSS, lintJS, devScripts, prodScripts, images, browserSyncServe, watchFiles);
+exports.dev = series(check, clean, devStyles, lintCSS, lintJS, devScripts, images, browserSyncServe, watchFiles);
+exports.prod = series(check, clean, cleanCache, devStyles, prodStyles, lintCSS, lintJS, devScripts, prodScripts);
