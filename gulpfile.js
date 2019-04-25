@@ -74,8 +74,13 @@ function clean(cb) {
 /**
  * Clear cache plugin
  */
-function cleanCache() {
-  return cache.clearAll()
+function cleanCache(cb) {
+  if (process.env.NODE_ENV === 'production' || process.env.CACHE_ENV === 'clear') { // only clear cache when running the release build (setting node env)
+    return cache.clearAll()
+  }
+  else { // else, ignore
+    cb()
+  }
 }
 
 /**
@@ -265,6 +270,16 @@ function check(cb) {
 }
 
 /**
+ * Check environment variables
+ */
+function checkEnvs(cb) {
+  console.log("NODE_ENV = " + process.env.NODE_ENV);
+  console.log("BABEL_ENV = " + process.env.BABEL_ENV);
+  console.log("TEST_ENV = " + process.env.TEST_ENV);
+  cb();
+}
+
+/**
  * Helper functions
  * @param error Error to output
  */
@@ -277,6 +292,7 @@ function errorAlert(error) {
  * Export available Gulp tasks
  */
 exports.check = check;
+exports.checkEnvs = checkEnvs;
 exports.clean = clean;
 exports.cleanCache = cleanCache;
 exports.copy = copy;
@@ -294,4 +310,4 @@ exports.watchFiles = watchFiles;
 // default, dev and prod tasks
 exports.default = series(check, clean, cleanCache, copy, images, lintCSS, devStyles, prodStyles, lintJS, devScripts, prodScripts, browserSyncServe, watchFiles);
 exports.dev = series(check, clean, copy, images, lintCSS, devStyles, lintJS, devScripts, browserSyncServe, watchFiles);
-exports.prod = series(check, clean, cleanCache, copy, images, lintCSS, devStyles, prodStyles, lintJS, devScripts, prodScripts);
+exports.prod = series(check, checkEnvs, clean, cleanCache, copy, images, lintCSS, devStyles, prodStyles, lintJS, devScripts, prodScripts);
