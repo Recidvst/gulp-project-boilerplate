@@ -9,7 +9,8 @@
     "lintJS": "eslint --fix './js/**/*.js'",
     "lintCSS": "stylelint --fix './css/**/*.scss'",
     "dev": "gulp dev",
-    "prod": "gulp prod"
+    "prod": "gulp prod",
+    "release": "NODE_ENV=production npm run prod"
   },
   "devDependencies": {
     "browser-sync": "^2.26.3",
